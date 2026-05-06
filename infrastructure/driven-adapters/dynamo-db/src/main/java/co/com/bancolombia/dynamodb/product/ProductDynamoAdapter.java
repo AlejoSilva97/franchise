@@ -52,7 +52,6 @@ public class ProductDynamoAdapter implements ProductRepository {
 
     @Override
     public Flux<TopStockProductByBranch> findTopStockProductsByFranchise(String franchiseId) {
-        // Paso 1: obtener todas las branches de la franchise via GSI
         DynamoDbAsyncIndex<BranchItem> branchIndex = branchTable.index("franchiseId-index");
 
         QueryEnhancedRequest branchQuery = QueryEnhancedRequest.builder()
@@ -62,24 +61,22 @@ public class ProductDynamoAdapter implements ProductRepository {
 
         return Flux.from(branchIndex.query(branchQuery))
                 .flatMap(page -> Flux.fromIterable(page.items()))
-                // Paso 2: por cada branch, buscar el producto con mayor stock
                 .flatMap(this::getTopProductForBranch);
     }
 
     private Mono<TopStockProductByBranch> getTopProductForBranch(BranchItem branch) {
         DynamoDbAsyncIndex<ProductItem> productIndex = productTable.index("branchId-stock-index");
 
-        // Ordena descendente por stock (sort key del GSI) y toma el primero
         QueryEnhancedRequest request = QueryEnhancedRequest.builder()
                 .queryConditional(QueryConditional.keyEqualTo(
                         Key.builder().partitionValue(branch.getId()).build()))
-                .scanIndexForward(false) // descendente = mayor stock primero
+                .scanIndexForward(false)
                 .limit(1)
                 .build();
 
         return Flux.from(productIndex.query(request))
                 .flatMap(page -> Flux.fromIterable(page.items()))
-                .next() // toma solo el primero (mayor stock)
+                .next()
                 .map(product -> TopStockProductByBranch.builder()
                         .id(product.getId())
                         .name(product.getName())

@@ -11,5 +11,4 @@ public class BranchResponseDTO {
     private String id;
     private String name;
     private String franchiseId;
-    //private List<ProductResponseDTO> products;
 }

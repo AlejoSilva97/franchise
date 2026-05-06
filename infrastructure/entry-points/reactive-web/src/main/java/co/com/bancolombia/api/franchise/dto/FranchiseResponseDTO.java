@@ -10,5 +10,4 @@ import lombok.Data;
 public class FranchiseResponseDTO {
     private String id;
     private String name;
-    //private List<BranchResponseDTO> branches;
 }
