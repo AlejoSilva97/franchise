@@ -1,0 +1,10 @@
+dependencies {
+    implementation project(':model')
+    implementation 'org.springframework:spring-context'
+    implementation platform('software.amazon.awssdk:bom:2.31.0')
+    implementation 'software.amazon.awssdk:dynamodb-enhanced'
+    implementation 'org.reactivecommons.utils:object-mapper-api:0.1.0'
+    implementation 'io.github.resilience4j:resilience4j-reactor:2.1.0'
+    implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.1.0'
+    testImplementation 'org.reactivecommons.utils:object-mapper:0.1.0'
+}
