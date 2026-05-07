@@ -2,6 +2,9 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 COPY . .
+# Instalamos sed (si no viene) y eliminamos los retornos de carro
+RUN apk add --no-cache bash sed
+RUN sed -i 's/\r$//' gradlew
 RUN chmod +x gradlew
 RUN ./gradlew :app-service:bootJar -x test -x validateStructure --no-daemon
 # Stage 2: Runtime
