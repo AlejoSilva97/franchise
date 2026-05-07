@@ -250,6 +250,6 @@ terraform destroy
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| `GET` | `/swagger-ui.html` | Documentación interactiva |
+| `GET` | `/webjars/swagger-ui/index.html` | Documentación interactiva |
 | `GET` | `/actuator/health` | Health check |
 | `GET` | `/actuator/prometheus` | Métricas Prometheus |
