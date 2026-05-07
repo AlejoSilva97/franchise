@@ -2,7 +2,6 @@ package co.com.bancolombia.model.franchise;
 
 import co.com.bancolombia.model.branch.Branch;
 import co.com.bancolombia.model.product.Product;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
