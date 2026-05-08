@@ -1,4 +1,4 @@
-package co.com.bancolombia.config;
+package co.com.bancolombia.dynamodb.config;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;

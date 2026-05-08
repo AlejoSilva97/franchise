@@ -2,11 +2,13 @@ package co.com.bancolombia.dynamodb.franchise;
 
 import co.com.bancolombia.model.franchise.Franchise;
 import co.com.bancolombia.model.franchise.gateways.FranchiseRepository;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -35,7 +37,10 @@ public class FranchiseDynamoAdapter implements FranchiseRepository {
                 .build();
         return Mono.fromFuture(table.putItem(item))
                 .thenReturn(franchise)
-                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker));
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .onErrorResume(CallNotPermittedException.class, ex -> {
+                    return Mono.empty();
+                });
     }
 
     @Override
