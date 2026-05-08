@@ -52,7 +52,10 @@ public class FranchiseDynamoAdapter implements FranchiseRepository {
                         .name(item.getName())
                         .branches(new java.util.ArrayList<>())
                         .build())
-                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker));
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .onErrorResume(CallNotPermittedException.class, ex -> {
+                    return Mono.empty();
+                });
     }
 
     @Override
