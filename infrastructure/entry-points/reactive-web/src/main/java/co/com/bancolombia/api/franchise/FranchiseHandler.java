@@ -61,9 +61,7 @@ public class FranchiseHandler {
                 })
                 .flatMap(franchise -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(toResponse(franchise)))
-                .onErrorResume(IllegalArgumentException.class, e -> badRequest(e.getMessage()))
-                .onErrorResume(e -> serverError());
+                        .bodyValue(toResponse(franchise)));
     }
 
     private FranchiseResponseDTO toResponse(Franchise franchise) {

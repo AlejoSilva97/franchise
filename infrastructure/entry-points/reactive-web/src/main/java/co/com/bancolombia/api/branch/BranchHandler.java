@@ -29,9 +29,7 @@ public class BranchHandler {
                 .flatMap(dto -> branchUseCase.createBranch(dto.getName(), dto.getFranchiseId()))
                 .flatMap(branch -> ServerResponse.status(201)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(toResponse(branch)))
-                .onErrorResume(IllegalArgumentException.class, e -> badRequest(e.getMessage()))
-                .onErrorResume(e -> serverError());
+                        .bodyValue(toResponse(branch)));
     }
 
     public Mono<ServerResponse> updateBranchName(ServerRequest serverRequest) {
@@ -48,9 +46,7 @@ public class BranchHandler {
                 })
                 .flatMap(branch -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(toResponse(branch)))
-                .onErrorResume(IllegalArgumentException.class, e -> badRequest(e.getMessage()))
-                .onErrorResume(e -> serverError());
+                        .bodyValue(toResponse(branch)));
     }
 
     private BranchResponseDTO toResponse(Branch branch) {

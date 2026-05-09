@@ -1,7 +1,13 @@
 package co.com.bancolombia.dynamodb.branch;
 
+import co.com.bancolombia.dynamodb.common.AdapterErrorMessages;
 import co.com.bancolombia.model.branch.Branch;
 import co.com.bancolombia.model.branch.gateways.BranchRepository;
+import co.com.bancolombia.model.common.exception.ServiceUnavailableException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -12,10 +18,13 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 public class BranchDynamoAdapter implements BranchRepository {
 
     private final DynamoDbAsyncTable<BranchItem> table;
+    private final CircuitBreaker circuitBreaker;
 
     public BranchDynamoAdapter(DynamoDbEnhancedAsyncClient client,
-                               @Value("${aws.dynamodb.table-names.branches:branches}") String tableName) {
+                               @Value("${aws.dynamodb.table-names.branches:branches}") String tableName,
+                               CircuitBreakerRegistry registry) {
         this.table = client.table(tableName, TableSchema.fromBean(BranchItem.class));
+        this.circuitBreaker = registry.circuitBreaker("databaseCircuitBreaker");
     }
 
     @Override
@@ -26,7 +35,11 @@ public class BranchDynamoAdapter implements BranchRepository {
                 .franchiseId(branch.getFranchiseId())
                 .build();
         return Mono.fromFuture(table.putItem(item))
-                .thenReturn(branch);
+                .thenReturn(branch)
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .onErrorResume(CallNotPermittedException.class, ex -> {
+                    return Mono.error(new ServiceUnavailableException(AdapterErrorMessages.CIRCUIT_BREAKER_OPEN));
+                });
     }
 
     @Override
@@ -38,7 +51,11 @@ public class BranchDynamoAdapter implements BranchRepository {
                         .name(item.getName())
                         .franchiseId(item.getFranchiseId())
                         .products(new java.util.ArrayList<>())
-                        .build());
+                        .build())
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .onErrorResume(CallNotPermittedException.class, ex -> {
+                    return Mono.error(new ServiceUnavailableException(AdapterErrorMessages.CIRCUIT_BREAKER_OPEN));
+                });
     }
 
     @Override
