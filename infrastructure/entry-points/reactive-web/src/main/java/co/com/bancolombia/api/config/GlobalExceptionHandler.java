@@ -45,6 +45,7 @@ public class GlobalExceptionHandler extends AbstractErrorWebExceptionHandler {
             status = HttpStatus.BAD_REQUEST;
             code = "400";
             message = "Bad Request";
+            detail = error.getMessage();
         } else if (error instanceof ServiceUnavailableException || error instanceof CallNotPermittedException) {
             status = HttpStatus.SERVICE_UNAVAILABLE;
             code = "503";
