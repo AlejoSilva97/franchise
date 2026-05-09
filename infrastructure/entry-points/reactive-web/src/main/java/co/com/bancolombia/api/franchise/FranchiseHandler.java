@@ -42,9 +42,7 @@ public class FranchiseHandler {
                 .collectList()
                 .flatMap(list -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(list))
-                .onErrorResume(IllegalArgumentException.class, e -> badRequest(e.getMessage()))
-                .onErrorResume(e -> serverError());
+                        .bodyValue(list));
     }
 
     public Mono<ServerResponse> updateFranchiseName(ServerRequest serverRequest) {

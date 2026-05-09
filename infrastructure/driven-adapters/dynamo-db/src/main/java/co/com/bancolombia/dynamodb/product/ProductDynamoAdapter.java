@@ -1,9 +1,15 @@
 package co.com.bancolombia.dynamodb.product;
 
 import co.com.bancolombia.dynamodb.branch.BranchItem;
+import co.com.bancolombia.dynamodb.common.AdapterErrorMessages;
+import co.com.bancolombia.model.common.exception.ServiceUnavailableException;
 import co.com.bancolombia.model.product.Product;
 import co.com.bancolombia.model.product.TopStockProductByBranch;
 import co.com.bancolombia.model.product.gateways.ProductRepository;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -17,32 +23,47 @@ public class ProductDynamoAdapter implements ProductRepository {
 
     private final DynamoDbAsyncTable<ProductItem> productTable;
     private final DynamoDbAsyncTable<BranchItem> branchTable;
+    private final CircuitBreaker circuitBreaker;
 
     public ProductDynamoAdapter(DynamoDbEnhancedAsyncClient client,
                                 @Value("${aws.dynamodb.table-names.products:products}") String productsTable,
-                                @Value("${aws.dynamodb.table-names.branches:branches}") String branchesTable) {
+                                @Value("${aws.dynamodb.table-names.branches:branches}") String branchesTable,
+                                CircuitBreakerRegistry registry) {
         this.productTable = client.table(productsTable, TableSchema.fromBean(ProductItem.class));
         this.branchTable  = client.table(branchesTable, TableSchema.fromBean(BranchItem.class));
+        this.circuitBreaker = registry.circuitBreaker("databaseCircuitBreaker");
     }
 
     @Override
     public Mono<Product> save(Product product) {
         ProductItem item = toItem(product);
         return Mono.fromFuture(productTable.putItem(item))
-                .thenReturn(product);
+                .thenReturn(product)
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .onErrorResume(CallNotPermittedException.class, ex -> {
+                    return Mono.error(new ServiceUnavailableException(AdapterErrorMessages.CIRCUIT_BREAKER_OPEN));
+                });
     }
 
     @Override
     public Mono<Product> findById(String id) {
         Key key = Key.builder().partitionValue(id).build();
         return Mono.fromFuture(productTable.getItem(key))
-                .map(this::toProduct);
+                .map(this::toProduct)
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .onErrorResume(CallNotPermittedException.class, ex -> {
+                    return Mono.error(new ServiceUnavailableException(AdapterErrorMessages.CIRCUIT_BREAKER_OPEN));
+                });
     }
 
     @Override
     public Mono<Void> deleteById(String id) {
         Key key = Key.builder().partitionValue(id).build();
-        return Mono.fromFuture(productTable.deleteItem(key)).then();
+        return Mono.fromFuture(productTable.deleteItem(key)).then()
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .onErrorResume(CallNotPermittedException.class, ex -> {
+                    return Mono.error(new ServiceUnavailableException(AdapterErrorMessages.CIRCUIT_BREAKER_OPEN));
+                });
     }
 
     @Override
@@ -61,7 +82,11 @@ public class ProductDynamoAdapter implements ProductRepository {
 
         return Flux.from(branchIndex.query(branchQuery))
                 .flatMap(page -> Flux.fromIterable(page.items()))
-                .flatMap(this::getTopProductForBranch);
+                .flatMap(this::getTopProductForBranch)
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .onErrorResume(CallNotPermittedException.class, ex ->
+                        Flux.error(new ServiceUnavailableException(AdapterErrorMessages.CIRCUIT_BREAKER_OPEN))
+                );
     }
 
     private Mono<TopStockProductByBranch> getTopProductForBranch(BranchItem branch) {

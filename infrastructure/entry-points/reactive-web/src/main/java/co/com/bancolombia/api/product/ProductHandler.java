@@ -32,9 +32,7 @@ public class ProductHandler {
                 .flatMap(dto -> productUseCase.createProduct(dto.getName(), dto.getStock(), dto.getBranchId()))
                 .flatMap(product -> ServerResponse.status(201)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(toResponse(product)))
-                .onErrorResume(IllegalArgumentException.class, e -> badRequest(e.getMessage()))
-                .onErrorResume(e -> serverError());
+                        .bodyValue(toResponse(product)));
     }
 
     public Mono<ServerResponse> deleteProduct(ServerRequest serverRequest) {
@@ -44,9 +42,7 @@ public class ProductHandler {
                 .filter(productId -> productId != null && !productId.trim().isEmpty())
                 .switchIfEmpty(Mono.error(new IllegalArgumentException(ApiErrorMessages.PRODUCT_ID_REQUIRED)))
                 .flatMap(productUseCase::deleteProduct)
-                .then(ServerResponse.noContent().build())
-                .onErrorResume(IllegalArgumentException.class, e -> badRequest(e.getMessage()))
-                .onErrorResume(e -> serverError());
+                .then(ServerResponse.noContent().build());
     }
 
     public Mono<ServerResponse> updateProductStock(ServerRequest serverRequest) {
@@ -63,9 +59,7 @@ public class ProductHandler {
                 })
                 .flatMap(product -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(toResponse(product)))
-                .onErrorResume(IllegalArgumentException.class, e -> badRequest(e.getMessage()))
-                .onErrorResume(e -> serverError());
+                        .bodyValue(toResponse(product)));
     }
 
     public Mono<ServerResponse> updateProductName(ServerRequest serverRequest) {
@@ -82,9 +76,7 @@ public class ProductHandler {
                 })
                 .flatMap(product -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(toResponse(product)))
-                .onErrorResume(IllegalArgumentException.class, e -> badRequest(e.getMessage()))
-                .onErrorResume(e -> serverError());
+                        .bodyValue(toResponse(product)));
     }
 
     private ProductResponseDTO toResponse(Product product) {
