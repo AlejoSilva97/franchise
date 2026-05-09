@@ -24,9 +24,7 @@ public class FranchiseHandler {
                 .flatMap(dto -> franchiseUseCase.createFranchise(dto.getName()))
                 .flatMap(franchise -> ServerResponse.status(201)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(toResponse(franchise)))
-                .onErrorResume(IllegalArgumentException.class, e -> badRequest(e.getMessage()))
-                .onErrorResume(e -> serverError());
+                        .bodyValue(toResponse(franchise)));
     }
 
     public Mono<ServerResponse> getTopProductByFranchiseId(ServerRequest serverRequest) {

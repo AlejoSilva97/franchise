@@ -1,5 +1,7 @@
 package co.com.bancolombia.dynamodb.franchise;
 
+import co.com.bancolombia.dynamodb.common.AdapterErrorMessages;
+import co.com.bancolombia.model.common.exception.ServiceUnavailableException;
 import co.com.bancolombia.model.franchise.Franchise;
 import co.com.bancolombia.model.franchise.gateways.FranchiseRepository;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
@@ -38,7 +40,7 @@ public class FranchiseDynamoAdapter implements FranchiseRepository {
                 .thenReturn(franchise)
                 .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
                 .onErrorResume(CallNotPermittedException.class, ex -> {
-                    return Mono.empty();
+                    return Mono.error(new ServiceUnavailableException(AdapterErrorMessages.CIRCUIT_BREAKER_OPEN));
                 });
     }
 
@@ -53,7 +55,7 @@ public class FranchiseDynamoAdapter implements FranchiseRepository {
                         .build())
                 .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
                 .onErrorResume(CallNotPermittedException.class, ex -> {
-                    return Mono.empty();
+                    return Mono.error(new ServiceUnavailableException(AdapterErrorMessages.CIRCUIT_BREAKER_OPEN));
                 });
     }
 
