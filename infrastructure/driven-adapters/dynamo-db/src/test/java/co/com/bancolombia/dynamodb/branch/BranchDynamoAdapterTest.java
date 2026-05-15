@@ -1,6 +1,7 @@
 package co.com.bancolombia.dynamodb.branch;
 
 import co.com.bancolombia.model.branch.Branch;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,16 +27,17 @@ class BranchDynamoAdapterTest {
     @Mock
     private DynamoDbEnhancedAsyncClient client;
 
-    @SuppressWarnings("unchecked")
     @Mock
     private DynamoDbAsyncTable<BranchItem> table;
 
     private BranchDynamoAdapter adapter;
 
+    private final CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
+
     @BeforeEach
     void setUp() {
         when(client.table(anyString(), any(TableSchema.class))).thenReturn(table);
-        adapter = new BranchDynamoAdapter(client, "branches");
+        adapter = new BranchDynamoAdapter(client, "branches", registry);
     }
 
     // ── save ───────────────────────────────────────────────────────

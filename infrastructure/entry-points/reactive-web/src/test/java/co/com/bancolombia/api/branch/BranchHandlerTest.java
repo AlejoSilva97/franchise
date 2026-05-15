@@ -48,31 +48,31 @@ class BranchHandlerTest {
     }
 
     @Test
-    void createBranch_emptyName_returns400() {
+    void createBranch_emptyName_throwError() {
         BranchRequestDTO dto = new BranchRequestDTO("  ", "f1");
 
         MockServerRequest request = MockServerRequest.builder()
                 .body(Mono.just(dto));
 
         StepVerifier.create(branchHandler.createBranch(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
     @Test
-    void createBranch_emptyFranchiseId_returns400() {
+    void createBranch_emptyFranchiseId_throwError() {
         BranchRequestDTO dto = new BranchRequestDTO("Branch Norte", "  ");
 
         MockServerRequest request = MockServerRequest.builder()
                 .body(Mono.just(dto));
 
         StepVerifier.create(branchHandler.createBranch(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
     @Test
-    void createBranch_franchiseNotFound_returns400() {
+    void createBranch_franchiseNotFound_throwError() {
         BranchRequestDTO dto = new BranchRequestDTO("Branch Norte", "bad-id");
 
         when(branchUseCase.createBranch("Branch Norte", "bad-id"))
@@ -82,11 +82,10 @@ class BranchHandlerTest {
                 .body(Mono.just(dto));
 
         StepVerifier.create(branchHandler.createBranch(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
-    // ── updateBranchName ───────────────────────────────────────────
 
     @Test
     void updateBranchName_success_returns200() {
@@ -107,7 +106,7 @@ class BranchHandlerTest {
     }
 
     @Test
-    void updateBranchName_emptyName_returns400() {
+    void updateBranchName_emptyName_throwError() {
         BranchNameRequestDTO dto = new BranchNameRequestDTO("  ");
 
         MockServerRequest request = MockServerRequest.builder()
@@ -115,12 +114,12 @@ class BranchHandlerTest {
                 .body(Mono.just(dto));
 
         StepVerifier.create(branchHandler.updateBranchName(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
     @Test
-    void updateBranchName_branchNotFound_returns400() {
+    void updateBranchName_branchNotFound_throwError() {
         BranchNameRequestDTO dto = new BranchNameRequestDTO("New Name");
 
         when(branchUseCase.updateBranchName("b99", "New Name"))
@@ -131,7 +130,7 @@ class BranchHandlerTest {
                 .body(Mono.just(dto));
 
         StepVerifier.create(branchHandler.updateBranchName(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 }

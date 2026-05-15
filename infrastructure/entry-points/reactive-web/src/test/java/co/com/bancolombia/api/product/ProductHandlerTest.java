@@ -46,36 +46,36 @@ class ProductHandlerTest {
     }
 
     @Test
-    void createProduct_emptyName_returns400() {
+    void createProduct_emptyName_throwError() {
         ProductRequestDTO dto = new ProductRequestDTO("  ", 50, "b1");
 
         MockServerRequest request = MockServerRequest.builder().body(Mono.just(dto));
 
         StepVerifier.create(productHandler.createProduct(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
     @Test
-    void createProduct_negativeStock_returns400() {
+    void createProduct_negativeStock_throwError() {
         ProductRequestDTO dto = new ProductRequestDTO("Burger", -1, "b1");
 
         MockServerRequest request = MockServerRequest.builder().body(Mono.just(dto));
 
         StepVerifier.create(productHandler.createProduct(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
     @Test
-    void createProduct_emptyBranchId_returns400() {
+    void createProduct_emptyBranchId_throwError() {
         ProductRequestDTO dto = new ProductRequestDTO("Burger", 50, "  ");
 
         MockServerRequest request = MockServerRequest.builder().body(Mono.just(dto));
 
         StepVerifier.create(productHandler.createProduct(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
 
@@ -93,7 +93,7 @@ class ProductHandlerTest {
     }
 
     @Test
-    void deleteProduct_notFound_returns400() {
+    void deleteProduct_notFound_throwError() {
         when(productUseCase.deleteProduct("p99"))
                 .thenReturn(Mono.error(new IllegalArgumentException("Product not found with ID: p99")));
 
@@ -102,8 +102,8 @@ class ProductHandlerTest {
                 .body(Mono.empty());
 
         StepVerifier.create(productHandler.deleteProduct(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
 
@@ -124,7 +124,7 @@ class ProductHandlerTest {
     }
 
     @Test
-    void updateProductStock_negativeStock_returns400() {
+    void updateProductStock_negativeStock_throwError() {
         ProductStockRequestDTO dto = new ProductStockRequestDTO(-5);
 
         MockServerRequest request = MockServerRequest.builder()
@@ -132,8 +132,8 @@ class ProductHandlerTest {
                 .body(Mono.just(dto));
 
         StepVerifier.create(productHandler.updateProductStock(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
 
@@ -154,7 +154,7 @@ class ProductHandlerTest {
     }
 
     @Test
-    void updateProductName_emptyName_returns400() {
+    void updateProductName_emptyName_throwError() {
         ProductNameRequestDTO dto = new ProductNameRequestDTO("  ");
 
         MockServerRequest request = MockServerRequest.builder()
@@ -162,7 +162,7 @@ class ProductHandlerTest {
                 .body(Mono.just(dto));
 
         StepVerifier.create(productHandler.updateProductName(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 }

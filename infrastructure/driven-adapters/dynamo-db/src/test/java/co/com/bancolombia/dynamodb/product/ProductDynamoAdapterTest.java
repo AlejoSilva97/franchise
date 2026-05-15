@@ -3,6 +3,7 @@ package co.com.bancolombia.dynamodb.product;
 import co.com.bancolombia.dynamodb.branch.BranchItem;
 import co.com.bancolombia.model.product.Product;
 import co.com.bancolombia.model.product.TopStockProductByBranch;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,21 +29,21 @@ class ProductDynamoAdapterTest {
     @Mock
     private DynamoDbEnhancedAsyncClient client;
 
-    @SuppressWarnings("unchecked")
     @Mock
     private DynamoDbAsyncTable<ProductItem> productTable;
 
-    @SuppressWarnings("unchecked")
     @Mock
     private DynamoDbAsyncTable<BranchItem> branchTable;
 
     private ProductDynamoAdapter adapter;
 
+    private final CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
+
     @BeforeEach
     void setUp() {
         when(client.table(eq("products"), any(TableSchema.class))).thenReturn(productTable);
         when(client.table(eq("branches"), any(TableSchema.class))).thenReturn(branchTable);
-        adapter = new ProductDynamoAdapter(client, "products", "branches");
+        adapter = new ProductDynamoAdapter(client, "products", "branches", registry);
     }
 
 

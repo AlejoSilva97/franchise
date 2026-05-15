@@ -48,7 +48,7 @@ class FranchiseHandlerTest {
     }
 
     @Test
-    void createFranchise_emptyName_returns400() {
+    void createFranchise_emptyName_throwError() {
         FranchiseRequestDTO dto = new FranchiseRequestDTO();
         dto.setName("  ");
 
@@ -56,12 +56,12 @@ class FranchiseHandlerTest {
                 .body(Mono.just(dto));
 
         StepVerifier.create(franchiseHandler.createFranchise(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
     @Test
-    void createFranchise_useCaseError_returns400() {
+    void createFranchise_useCaseError_throwError() {
         FranchiseRequestDTO dto = new FranchiseRequestDTO();
         dto.setName("AB");
 
@@ -72,8 +72,8 @@ class FranchiseHandlerTest {
                 .body(Mono.just(dto));
 
         StepVerifier.create(franchiseHandler.createFranchise(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
     @Test
@@ -96,7 +96,7 @@ class FranchiseHandlerTest {
     }
 
     @Test
-    void getTopProductByFranchiseId_franchiseNotFound_returns400() {
+    void getTopProductByFranchiseId_franchiseNotFound_throwError() {
         when(franchiseUseCase.getTopProductByFranchiseId("bad-id"))
                 .thenReturn(Flux.error(new IllegalArgumentException("Franchise not found with ID: bad-id")));
 
@@ -105,7 +105,7 @@ class FranchiseHandlerTest {
                 .body(Mono.empty());
 
         StepVerifier.create(franchiseHandler.getTopProductByFranchiseId(request))
-                .assertNext(response -> assertEquals(HttpStatus.BAD_REQUEST, response.statusCode()))
-                .verifyComplete();
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 }
